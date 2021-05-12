@@ -23,6 +23,12 @@ export default class UploadImages extends Component {
     for (let i = 0; i < selectedfFles.length; i++) {
       let selectedFile = selectedfFles[i];
       selectedFile.id = i;
+      selectedFile.isValid = true;
+
+      if (!this.verifyExtension(selectedFile.name)) {
+        selectedFile.isValid = false;
+      }
+
       filesToBeUploaded.push(selectedFile);
     }
 
@@ -46,6 +52,14 @@ export default class UploadImages extends Component {
     this.setState({ images: [] });
   }
 
+  verifyExtension(name) {
+    let ext = name.split(".");
+    if (ext[ext.length - 1].toLowerCase() == "jpg" || ext[ext.length - 1].toLowerCase() == "png") {
+      return true;
+    }
+    return false
+  }
+
   render() {
 
     const images = this.state.images;
@@ -67,9 +81,12 @@ export default class UploadImages extends Component {
               <h4 className="mb-3">Images to be uploaded</h4>
               {images.map((image) => (
                 <div className="col-md-3">
-                  <div className="img-thumb">
+                  <div className={`img-thumb ${!image.isValid && 'danger-border'}`}>
                     <div className="thumb"><img src={URL.createObjectURL(image)}></img></div>
                     <div className="thumb-close" onClick={() => this.onDeleteFile(image.id)}><img src="/close-icon.png"></img></div>
+                    {!image.isValid && (
+                      <div>Only jpg and png are allowed</div>
+                    )}
                   </div>
                 </div>
               ))}

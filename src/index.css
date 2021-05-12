@@ -74,3 +74,7 @@ code {
 .remove-btn-bg{
   background-color: #d52c2c !important;
 }
+
+.danger-border{
+ border: 1px solid #d52c2c;
+}
