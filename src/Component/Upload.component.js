@@ -10,7 +10,6 @@ export default class UploadImages extends Component {
     };
 
     this.onSelectFiles = this.onSelectFiles.bind(this);
-    this.onDeleteFile = this.onDeleteFile.bind(this);
   }
 
   componentDidMount() {
@@ -41,6 +40,10 @@ export default class UploadImages extends Component {
       }
     }
     this.setState({ images: images });
+  }
+
+  onRemoveAll() {
+    this.setState({ images: [] });
   }
 
   render() {
@@ -78,7 +81,7 @@ export default class UploadImages extends Component {
               </div>
 
               <div className="col-md-3">
-                <div className="img-thumb btn-thumb">
+                <div className="img-thumb btn-thumb" onClick={() => this.onRemoveAll()}>
                   <div className="thumb remove-btn-bg"><span className="upload-img">Remove all images</span></div>
                 </div>
               </div>
