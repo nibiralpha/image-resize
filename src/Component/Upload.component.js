@@ -63,7 +63,9 @@ export default class UploadImages extends Component {
   onUpload() {
     let images = this.state.images;
     images.forEach(image => {
-      FileUploadService.upload(image);
+      if (image.isValid) {
+        FileUploadService.upload(image);
+      }
     });
   }
 
