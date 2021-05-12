@@ -6,16 +6,11 @@ export default class UploadImages extends Component {
   constructor(props) {
     super(props)
     this.state = {
-      images: [
-        // { id: Math.random(0, 10), url: "/og-image.png", resize: "110x110" },
-        // { id: Math.random(0, 10), url: "/og-image.png", resize: "110x110" },
-        // { id: Math.random(0, 10), url: "/og-image.png", resize: "110x110" },
-        // { id: Math.random(0, 10), url: "/og-image.png", resize: "110x110" },
-        // { id: Math.random(0, 10), url: "/og-image.png", resize: "110x110" },
-      ]
+      images: []
     };
 
     this.onSelectFiles = this.onSelectFiles.bind(this);
+    this.onDeleteFile = this.onDeleteFile.bind(this);
   }
 
   componentDidMount() {
@@ -28,10 +23,24 @@ export default class UploadImages extends Component {
 
     for (let i = 0; i < selectedfFles.length; i++) {
       let selectedFile = selectedfFles[i];
+      selectedFile.id = i;
       filesToBeUploaded.push(selectedFile);
     }
 
     this.setState({ images: filesToBeUploaded });
+  }
+
+  onDeleteFile(id) {
+
+    let images = [...this.state.images];
+
+    for (let i = 0; i < images.length; i++) {
+      let image = images[i];
+      if (image.id == id) {
+        images.splice(i, 1);
+      }
+    }
+    this.setState({ images: images });
   }
 
   render() {
@@ -47,6 +56,7 @@ export default class UploadImages extends Component {
           </div>
         </div>
 
+        {/* {console.log(images)} */}
 
         {images.length > 0 && (
           <>
@@ -56,7 +66,7 @@ export default class UploadImages extends Component {
                 <div className="col-md-3">
                   <div className="img-thumb">
                     <div className="thumb"><img src={URL.createObjectURL(image)}></img></div>
-                    <div className="thumb-close"><img src="/close-icon.png"></img></div>
+                    <div className="thumb-close" onClick={() => this.onDeleteFile(image.id)}><img src="/close-icon.png"></img></div>
                   </div>
                 </div>
               ))}
