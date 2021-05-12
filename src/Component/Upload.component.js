@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import UploadService from "../Service/upload.service";
+import FileUploadService from "../Service/upload.service";
 
 
 export default class UploadImages extends Component {
@@ -60,6 +60,13 @@ export default class UploadImages extends Component {
     return false
   }
 
+  onUpload() {
+    let images = this.state.images;
+    images.forEach(image => {
+      FileUploadService.upload(image);
+    });
+  }
+
   render() {
 
     const images = this.state.images;
@@ -92,7 +99,7 @@ export default class UploadImages extends Component {
               ))}
 
               <div className="col-md-3">
-                <div className="img-thumb btn-thumb">
+                <div className="img-thumb btn-thumb" onClick={() => this.onUpload()}>
                   <div className="thumb upload-btn-bg"><span className="upload-img">Upload all images</span></div>
                 </div>
               </div>
