@@ -8,9 +8,14 @@ import UploadImages from "./Component/Upload.component";
 
 function App() {
   return (
-    <div className="container">
-      <div className="content">
-        <UploadImages />
+    <div className="container page-top">
+      {/* <div className="row mb-4">
+        <h1>Simaple image resize app</h1>
+      </div> */}
+      <div className="row">
+        <div className="col-md-6">
+          <UploadImages />
+        </div>
       </div>
     </div>
   );
