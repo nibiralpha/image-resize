@@ -3,13 +3,21 @@ import FileUploadService from "../Service/upload.service";
 
 
 export default class UploadImages extends Component {
+
   constructor(props) {
     super(props)
+
+    this.totalFileUploaded = 0;
+
     this.state = {
-      images: []
+      images: [],
+      isUploading: false,
+      upload: false,
+      resolution: "1080 x 1920"
     };
 
     this.onSelectFiles = this.onSelectFiles.bind(this);
+    this.allFileUploaded = this.allFileUploaded.bind(this);
   }
 
   componentDidMount() {
@@ -24,6 +32,7 @@ export default class UploadImages extends Component {
       let selectedFile = selectedfFles[i];
       selectedFile.id = i;
       selectedFile.isValid = true;
+      selectedFile.imgStatus = selectedFile.imgStatus === undefined ? "ACTIVE" : selectedFile.imgStatus;
 
       if (!this.verifyExtension(selectedFile.name)) {
         selectedFile.isValid = false;
@@ -32,7 +41,7 @@ export default class UploadImages extends Component {
       filesToBeUploaded.push(selectedFile);
     }
 
-    this.setState({ images: filesToBeUploaded });
+    this.setState({ images: filesToBeUploaded, upload: false, isUploading: false });
   }
 
   onDeleteFile(id) {
@@ -49,6 +58,10 @@ export default class UploadImages extends Component {
   }
 
   onRemoveAll() {
+    if (this.state.isUploading) {
+      return;
+    }
+
     this.setState({ images: [] });
   }
 
@@ -61,12 +74,62 @@ export default class UploadImages extends Component {
   }
 
   onUpload() {
+
+    if (this.state.isUploading) {
+      return;
+    }
+
+    let data = {
+      resolution: this.state.resolution
+    };
+
     let images = this.state.images;
     images.forEach(image => {
-      if (image.isValid) {
-        FileUploadService.upload(image);
+
+      if (image.isValid && image.imgStatus != "SUCCESS") {
+        image.imgStatus = "UPLOADING";
+        FileUploadService.upload(image, data).then((res) => {
+          this.onUploadSuccess(res.data);
+        }).catch((err) => {
+          console.log("upload error", err);
+        });
       }
     });
+
+    this.setState({ images: images, isUploading: true });
+  }
+
+  onUploadSuccess(successResponse) {
+    let images = this.state.images;
+
+    for (let i = 0; i < images.length; i++) {
+      let image = images[i];
+
+      if (image.id == parseInt(successResponse.data.id)) {
+        image.imgStatus = "SUCCESS";
+        this.totalFileUploaded++;
+      }
+    }
+
+    this.setState({ images: images, upload: this.allFileUploaded() });
+  }
+
+  allFileUploaded() {
+    let images = this.state.images;
+    let totalSelectedFiles = 0;
+
+    for (let i = 0; i < images.length; i++) {
+      let image = images[i];
+      if (image.isValid) {
+        totalSelectedFiles++;
+      }
+    }
+
+    if (this.totalFileUploaded == totalSelectedFiles) {
+      return true;
+    }
+
+    return false;
   }
 
   render() {
@@ -78,11 +141,17 @@ export default class UploadImages extends Component {
         <div className="row">
           <div className="col-md-8">
             <label className="form-label" htmlFor="customFile">Upload image</label>
-            <input multiple type="file" className="form-control" id="customFile" onChange={this.onSelectFiles} />
+            <input multiple type="file" className="form-control" id="customFile" onChange={this.onSelectFiles}/>
+            <br></br>
+            <select className="form-select" defaultValue={this.state.resolution} onChange={(e) => this.setState({ resolution: e.target.value })}>
+              <option value="1080x1920">1080x1920 (Instagram - story)</option>
+              <option value="1080x1080">1080x1080 (Instagram - Square)</option>
+              <option value="1200x628">1200x628 (Facebook - post)</option>
+              <option value="1200x670">1200x670 (Twitter - post)</option>
+              <option value="1280x720">1280x720 (Youtube - Thumbnail)</option>
+            </select>
           </div>
         </div>
-
-        {/* {console.log(images)} */}
 
         {images.length > 0 && (
           <>
@@ -92,7 +161,15 @@ export default class UploadImages extends Component {
                 <div className="col-md-3">
                   <div className={`img-thumb ${!image.isValid && 'danger-border'}`}>
                     <div className="thumb"><img src={URL.createObjectURL(image)}></img></div>
-                    <div className="thumb-close" onClick={() => this.onDeleteFile(image.id)}><img src="/close-icon.png"></img></div>
+
+                    {image.imgStatus == "ACTIVE" && (
+                      <div className="thumb-close" onClick={() => this.onDeleteFile(image.id)}><img src="/close-icon.png"></img></div>
+                    )}
+
+                    {image.imgStatus == "SUCCESS" && (
+                      <div className="thumb-close"><img src="/success.png"></img></div>
+                    )}
+
                     {!image.isValid && (
                       <div>Only jpg and png are allowed</div>
                     )}
@@ -100,17 +177,28 @@ export default class UploadImages extends Component {
                 </div>
               ))}
 
-              <div className="col-md-3">
-                <div className="img-thumb btn-thumb" onClick={() => this.onUpload()}>
-                  <div className="thumb upload-btn-bg"><span className="upload-img">Upload all images</span></div>
-                </div>
-              </div>
 
-              <div className="col-md-3">
-                <div className="img-thumb btn-thumb" onClick={() => this.onRemoveAll()}>
-                  <div className="thumb remove-btn-bg"><span className="upload-img">Remove all images</span></div>
+              {!this.state.upload && (
+                <div className="col-md-3">
+                  <div className="img-thumb btn-thumb" onClick={() => this.onUpload()}>
+                    <div className="thumb upload-btn-bg">
+                      <span className="upload-img">{!this.state.isUploading ? 'Upload all images' : 'Uploading'}</span>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {!this.state.isUploading && (
+                <div className="col-md-3">
+                  <div className="img-thumb btn-thumb" onClick={() => this.onRemoveAll()}>
+                    <div className="thumb remove-btn-bg"><span className="upload-img">Remove all images</span></div>
+                  </div>
+                </div>
+              )}
+
+              {this.state.upload && (
+                <div>All files are uploaded</div>
+              )}
             </div>
           </>
         )}
